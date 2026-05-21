@@ -1,4 +1,3 @@
-import { useEffect, useState } from "react"
 import { AppSidebar } from "~/components/app-sidebar"
 import {
   Breadcrumb,
@@ -10,7 +9,6 @@ import {
 } from "~/components/ui/breadcrumb"
 import {
   Card,
-  CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
@@ -21,33 +19,7 @@ import {
   SidebarProvider,
   SidebarTrigger,
 } from "~/components/ui/sidebar"
-import { initializeApp } from "firebase/app"
-import { getDatabase, ref, onValue } from "firebase/database"
-import { app } from "~/lib/firebase/init-firebase"
-
-type DeviceData = {
-  eco?: boolean
-  lastSeen?: number
-  mode?: string
-  online?: boolean
-  sensorHeight?: number
-}
-
-const getDeviceData = (
-  firebaseApp: ReturnType<typeof initializeApp>,
-  onUpdate: (data: DeviceData) => void
-) => {
-  const db = getDatabase(firebaseApp)
-  const deviceRef = ref(db, "device")
-
-  return onValue(deviceRef, (snapshot) => {
-    const data = snapshot.val() as DeviceData | null
-
-    if (data) {
-      onUpdate(data)
-    }
-  })
-}
+import { useGetDeviceData } from "~/hooks/use-get-device-data"
 
 const formatLastSeen = (lastSeen?: number) => {
   if (lastSeen === 0 || lastSeen === undefined) return "-"
@@ -63,26 +35,7 @@ const formatLastSeen = (lastSeen?: number) => {
 }
 
 export default function DeviceInfoPage() {
-  const [deviceData, setDeviceData] = useState<DeviceData>({
-    eco: false,
-    lastSeen: 0,
-    mode: "-",
-    online: false,
-    sensorHeight: 0,
-  })
-
-  useEffect(() => {
-    const unsubscribe = getDeviceData(
-      app as ReturnType<typeof initializeApp>,
-      (data) => {
-        setDeviceData((current) => ({ ...current, ...data }))
-      }
-    )
-
-    return () => {
-      unsubscribe()
-    }
-  }, [])
+  const deviceData = useGetDeviceData()
 
   const cards = [
     {

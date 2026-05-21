@@ -7,4 +7,5 @@ export default [
   // Main App
   route("dashboard", "routes/dashboard.tsx"),
   route("device-info", "routes/device-info.tsx"),
+  route("settings", "routes/settings.tsx"),
 ] satisfies RouteConfig
