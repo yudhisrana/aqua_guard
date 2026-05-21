@@ -19,6 +19,7 @@ import {
   ComputerTerminalIcon,
   CommandIcon,
   LayoutDashboard,
+  SettingsIcon,
 } from "@hugeicons/core-free-icons"
 import { NavDashboard } from "./nav-dashboard"
 
@@ -45,6 +46,12 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         url: "/device-info",
         icon: <HugeiconsIcon icon={ComputerTerminalIcon} strokeWidth={2} />,
         isActive: pathname === "/device-info",
+      },
+      {
+        title: "Settings",
+        url: "/settings",
+        icon: <HugeiconsIcon icon={SettingsIcon} strokeWidth={2} />,
+        isActive: pathname === "/settings",
       },
     ],
   }
