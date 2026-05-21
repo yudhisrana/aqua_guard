@@ -1,6 +1,7 @@
 "use client"
 
 import * as React from "react"
+import { useLocation } from "react-router"
 
 import { NavMain } from "~/components/nav-main"
 import { NavUser } from "~/components/nav-user"
@@ -16,38 +17,38 @@ import {
 import { HugeiconsIcon } from "@hugeicons/react"
 import {
   ComputerTerminalIcon,
-  RoboticIcon,
-  BookOpen02Icon,
-  Settings05Icon,
   CommandIcon,
+  LayoutDashboard,
 } from "@hugeicons/core-free-icons"
 import { NavDashboard } from "./nav-dashboard"
 
-const data = {
-  user: {
-    name: "shadcn",
-    email: "m@example.com",
-    avatar: "/avatars/shadcn.jpg",
-  },
-  navDashboard: [
-    {
-      title: "Dashboard",
-      url: "/dashboard",
-      icon: <HugeiconsIcon icon={ComputerTerminalIcon} strokeWidth={2} />,
-      isActive: true,
-    },
-  ],
-  navMain: [
-    {
-      title: "Playground",
-      url: "#",
-      icon: <HugeiconsIcon icon={ComputerTerminalIcon} strokeWidth={2} />,
-      isActive: true,
-    },
-  ],
-}
-
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+  const { pathname } = useLocation()
+
+  const data = {
+    user: {
+      name: "shadcn",
+      email: "m@example.com",
+      avatar: "/avatars/shadcn.jpg",
+    },
+    navDashboard: [
+      {
+        title: "Dashboard",
+        url: "/dashboard",
+        icon: <HugeiconsIcon icon={LayoutDashboard} strokeWidth={2} />,
+        isActive: pathname === "/dashboard",
+      },
+    ],
+    navMain: [
+      {
+        title: "Device Info",
+        url: "/device-info",
+        icon: <HugeiconsIcon icon={ComputerTerminalIcon} strokeWidth={2} />,
+        isActive: pathname === "/device-info",
+      },
+    ],
+  }
+
   return (
     <Sidebar variant="inset" {...props}>
       <SidebarHeader>
