@@ -19,28 +19,28 @@ import {
 } from "~/components/ui/card"
 import { ChartContainer, type ChartConfig } from "~/components/ui/chart"
 
-export const description = "A radial chart with a custom shape"
+type ChartRadialShapeProps = {
+  chartTitle: string
+  chartDescription: string
+  chartData: {
+    name: string
+    value: number
+    fill?: string
+  }[]
+  chartConfig: ChartConfig
+}
 
-const chartData = [
-  { browser: "safari", visitors: 1260, fill: "var(--color-safari)" },
-]
-
-const chartConfig = {
-  visitors: {
-    label: "Visitors",
-  },
-  safari: {
-    label: "Safari",
-    color: "var(--chart-2)",
-  },
-} satisfies ChartConfig
-
-export function ChartRadialShape() {
+export function ChartRadialShape({
+  chartTitle,
+  chartDescription,
+  chartData,
+  chartConfig,
+}: ChartRadialShapeProps) {
   return (
     <Card className="flex flex-col">
       <CardHeader className="items-center pb-0">
-        <CardTitle>Radial Chart - Shape</CardTitle>
-        <CardDescription>January - June 2024</CardDescription>
+        <CardTitle>{chartTitle}</CardTitle>
+        <CardDescription>{chartDescription}</CardDescription>
       </CardHeader>
       <CardContent className="flex-1 pb-0">
         <ChartContainer config={chartConfig}>
@@ -57,7 +57,7 @@ export function ChartRadialShape() {
               className="first:fill-muted last:fill-background"
               polarRadius={[86, 74]}
             />
-            <RadialBar dataKey="visitors" background />
+            <RadialBar dataKey="value" background />
             <PolarRadiusAxis tick={false} tickLine={false} axisLine={false}>
               <Label
                 content={({ viewBox }) => {
@@ -74,14 +74,14 @@ export function ChartRadialShape() {
                           y={viewBox.cy}
                           className="fill-foreground text-4xl font-bold"
                         >
-                          {chartData[0].visitors.toLocaleString()}
+                          {chartData[0].value.toLocaleString()}
                         </tspan>
                         <tspan
                           x={viewBox.cx}
                           y={(viewBox.cy || 0) + 24}
                           className="fill-muted-foreground"
                         >
-                          Visitors
+                          {chartData[0].name}
                         </tspan>
                       </text>
                     )
