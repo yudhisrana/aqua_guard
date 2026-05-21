@@ -27,8 +27,10 @@ import { useGetControlsData } from "~/hooks/use-get-controls-data"
 import { useGetDeviceData } from "~/hooks/use-get-device-data"
 import { useGetSettingsData } from "~/hooks/use-get-settings-data"
 import type { SettingsData } from "~/types"
+import { getDatabase, ref, set } from "firebase/database"
+import { app } from "~/lib/firebase/init-firebase"
 
-const defaultSettings = {
+const defaultSettings: SettingsData = {
   activeInterval: 0,
   ecoInterval: 0,
   readInterval: 0,
@@ -70,19 +72,22 @@ export default function SettingsPage() {
   )
 
   const handleControlToggle = () => {
+    const db = getDatabase(app)
     const nextValue = !controlsData.buzzer
-    console.log("[settings] buzzer toggle:", nextValue)
+    set(ref(db, `controls/buzzer`), nextValue)
   }
 
   const handleDeviceToggle = (field: "eco" | "mode") => {
+    const db = getDatabase(app)
+
     if (field === "eco") {
       const nextValue = !deviceData.eco
-      console.log("[settings] device eco toggle:", nextValue)
+      set(ref(db, `device/eco`), nextValue)
       return
     }
 
     const nextValue = deviceData.mode === "AUTO" ? "MANUAL" : "AUTO"
-    console.log("[settings] device mode toggle:", nextValue)
+    set(ref(db, `device/mode`), nextValue)
   }
 
   const handleDraftChange = (field: keyof SettingsData, value: string) => {
@@ -90,10 +95,6 @@ export default function SettingsPage() {
       ...current,
       [field]: Number(value),
     }))
-  }
-
-  const handleSettingsLog = () => {
-    console.log("[settings] manual settings draft:", draftSettings)
   }
 
   return (
