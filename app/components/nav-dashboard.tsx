@@ -24,7 +24,7 @@ export function NavDashboard({
         {items.map((item) => {
           const isActive = item.isActive ?? location.pathname === item.url
           return (
-            <SidebarMenuItem>
+            <SidebarMenuItem key={item.url}>
               <SidebarMenuButton
                 asChild
                 tooltip={item.title}
