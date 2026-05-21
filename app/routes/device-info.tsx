@@ -42,7 +42,6 @@ const getDeviceData = (
 
   return onValue(deviceRef, (snapshot) => {
     const data = snapshot.val() as DeviceData | null
-    console.log("[device] realtime data:", data)
 
     if (data) {
       onUpdate(data)
@@ -87,7 +86,7 @@ export default function DeviceInfoPage() {
 
   const cards = [
     {
-      label: "Status Online",
+      label: "Status Perangkat",
       value: deviceData.online ? "Online" : "Offline",
       description: deviceData.online
         ? "Device sedang mengirim data"
@@ -95,12 +94,14 @@ export default function DeviceInfoPage() {
       tone: deviceData.online
         ? "border-emerald-500/20 bg-emerald-500/10 text-emerald-700"
         : "border-red-500/20 bg-red-500/10 text-red-700",
+      spanClass: "xl:col-span-2",
     },
     {
       label: "Mode Operasi",
       value: deviceData.mode ?? "-",
       description: "Mode yang sedang digunakan perangkat",
       tone: "border-sky-500/20 bg-sky-500/10 text-sky-700",
+      spanClass: "xl:col-span-2",
     },
     {
       label: "Eco Mode",
@@ -109,6 +110,7 @@ export default function DeviceInfoPage() {
       tone: deviceData.eco
         ? "border-amber-500/20 bg-amber-500/10 text-amber-700"
         : "border-zinc-500/20 bg-zinc-500/10 text-zinc-700",
+      spanClass: "xl:col-span-2",
     },
     {
       label: "Sensor Height",
@@ -118,6 +120,14 @@ export default function DeviceInfoPage() {
           : "-",
       description: "Ketinggian sensor yang terdeteksi",
       tone: "border-violet-500/20 bg-violet-500/10 text-violet-700",
+      spanClass: "xl:col-span-3",
+    },
+    {
+      label: "Last Seen",
+      value: formatLastSeen(deviceData.lastSeen),
+      description: "Waktu terakhir perangkat mengirim data",
+      tone: "border-yellow-500/20 bg-yellow-500/10 text-yellow-700",
+      spanClass: "xl:col-span-3",
     },
   ]
 
@@ -149,9 +159,6 @@ export default function DeviceInfoPage() {
           <div className="overflow-hidden rounded-3xl border border-border/60 bg-linear-to-br from-background via-background to-muted/40 p-6 shadow-sm">
             <div className="flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
               <div>
-                <p className="text-sm font-medium text-muted-foreground">
-                  Device overview
-                </p>
                 <h1 className="font-heading text-3xl font-semibold tracking-tight">
                   Informasi perangkat
                 </h1>
@@ -177,14 +184,19 @@ export default function DeviceInfoPage() {
             </div>
           </div>
 
-          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-6">
             {cards.map((card) => (
-              <Card key={card.label} className="border-border/60 bg-background">
+              <Card
+                key={card.label}
+                className={`border-border/60 bg-background ${card.spanClass}`}
+              >
                 <CardHeader className="space-y-3">
-                  <div
-                    className={`inline-flex w-fit rounded-full border px-3 py-1 text-xs font-medium ${card.tone}`}
-                  >
-                    {card.label}
+                  <div className="flex items-center justify-between gap-3">
+                    <div
+                      className={`inline-flex w-fit rounded-full border px-3 py-1 text-xs font-medium ${card.tone}`}
+                    >
+                      {card.label}
+                    </div>
                   </div>
                   <CardTitle className="text-2xl">{card.value}</CardTitle>
                   <CardDescription>{card.description}</CardDescription>
@@ -192,45 +204,6 @@ export default function DeviceInfoPage() {
               </Card>
             ))}
           </div>
-
-          <Card className="border-border/60 bg-background">
-            <CardHeader>
-              <CardTitle>Detail Realtime</CardTitle>
-              <CardDescription>
-                Data yang diterima dari folder device.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-                <div className="rounded-2xl border border-border/60 bg-muted/30 p-4">
-                  <p className="text-sm text-muted-foreground">Mode</p>
-                  <p className="mt-1 text-lg font-medium">
-                    {deviceData.mode ?? "-"}
-                  </p>
-                </div>
-                <div className="rounded-2xl border border-border/60 bg-muted/30 p-4">
-                  <p className="text-sm text-muted-foreground">Last Seen</p>
-                  <p className="mt-1 text-lg font-medium">
-                    {formatLastSeen(deviceData.lastSeen)}
-                  </p>
-                </div>
-                <div className="rounded-2xl border border-border/60 bg-muted/30 p-4">
-                  <p className="text-sm text-muted-foreground">Eco Mode</p>
-                  <p className="mt-1 text-lg font-medium">
-                    {deviceData.eco ? "Aktif" : "Nonaktif"}
-                  </p>
-                </div>
-                <div className="rounded-2xl border border-border/60 bg-muted/30 p-4">
-                  <p className="text-sm text-muted-foreground">Sensor Height</p>
-                  <p className="mt-1 text-lg font-medium">
-                    {typeof deviceData.sensorHeight === "number"
-                      ? `${deviceData.sensorHeight} cm`
-                      : "-"}
-                  </p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
         </div>
       </SidebarInset>
     </SidebarProvider>
