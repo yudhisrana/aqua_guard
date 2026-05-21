@@ -16,19 +16,16 @@ export function NavDashboard({
     isActive?: boolean
   }[]
 }) {
-  const location = useLocation()
-
   return (
     <SidebarGroup>
       <SidebarMenu>
         {items.map((item) => {
-          const isActive = item.isActive ?? location.pathname === item.url
           return (
             <SidebarMenuItem key={item.url}>
               <SidebarMenuButton
                 asChild
                 tooltip={item.title}
-                isActive={isActive}
+                isActive={item.isActive}
               >
                 <a href={item.url}>
                   {item.icon}
