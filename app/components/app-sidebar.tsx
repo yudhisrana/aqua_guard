@@ -17,9 +17,9 @@ import {
 import { HugeiconsIcon } from "@hugeicons/react"
 import {
   ComputerTerminalIcon,
-  CommandIcon,
   LayoutDashboard,
   SettingsIcon,
+  DropletIcon,
 } from "@hugeicons/core-free-icons"
 import { NavDashboard } from "./nav-dashboard"
 
@@ -28,8 +28,8 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 
   const data = {
     user: {
-      name: "shadcn",
-      email: "m@example.com",
+      name: "Administrator",
+      email: "admin@example.com",
       avatar: "/avatars/shadcn.jpg",
     },
     navDashboard: [
@@ -65,7 +65,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
               <a href="#">
                 <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
                   <HugeiconsIcon
-                    icon={CommandIcon}
+                    icon={DropletIcon}
                     strokeWidth={2}
                     className="size-4"
                   />
