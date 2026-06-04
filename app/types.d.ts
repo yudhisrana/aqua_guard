@@ -1,4 +1,5 @@
 export type DeviceData = {
+  config?: SettingsData["config"]
   status?: {
     activityState?: string
     batteryPercent?: number
@@ -24,9 +25,29 @@ export type ControlsData = {
 }
 
 export type SettingsData = {
-  activeInterval?: number
-  ecoInterval?: number
-  readInterval?: number
-  safeThreshold?: number
-  warningThreshold?: number
+  config?: {
+    adaptive?: {
+      alertReadInterval?: number
+      alertReportInterval?: number
+      lowPowerReadInterval?: number
+      lowPowerReportInterval?: number
+      monitoringReadInterval?: number
+      monitoringReportInterval?: number
+    }
+    beepInterval?: number
+    buzzerOverride?: string
+    fixed?: {
+      readInterval?: number
+      reportInterval?: number
+    }
+    lcdOverride?: string
+    mode?: string
+    reset?: {
+      requested?: boolean
+      type?: string
+    }
+    safeThreshold?: number
+    updatedAt?: number
+    warningThreshold?: number
+  }
 }

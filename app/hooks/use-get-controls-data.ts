@@ -11,7 +11,7 @@ export function useGetControlsData() {
 
   useEffect(() => {
     const db = getDatabase(app)
-    const deviceRef = ref(db, "controls")
+    const deviceRef = ref(db, "devices/aquaguard-01")
 
     const unsubscribe = onValue(deviceRef, (snapshot) => {
       const data = snapshot.val() as ControlsData | null

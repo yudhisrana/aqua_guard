@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react"
+import React, { useEffect, useMemo, useState } from "react"
 import { AppSidebar } from "~/components/app-sidebar"
 import {
   Breadcrumb,
@@ -9,13 +9,7 @@ import {
   BreadcrumbSeparator,
 } from "~/components/ui/breadcrumb"
 import { Button } from "~/components/ui/button"
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "~/components/ui/card"
+import { Card, CardContent } from "~/components/ui/card"
 import { Input } from "~/components/ui/input"
 import { Separator } from "~/components/ui/separator"
 import {
@@ -23,20 +17,12 @@ import {
   SidebarProvider,
   SidebarTrigger,
 } from "~/components/ui/sidebar"
-import { useGetControlsData } from "~/hooks/use-get-controls-data"
-import { useGetDeviceData } from "~/hooks/use-get-device-data"
 import { useGetSettingsData } from "~/hooks/use-get-settings-data"
 import type { SettingsData } from "~/types"
 import { getDatabase, ref, set } from "firebase/database"
 import { app } from "~/lib/firebase/init-firebase"
-
-const defaultSettings: SettingsData = {
-  activeInterval: 0,
-  ecoInterval: 0,
-  readInterval: 0,
-  safeThreshold: 0,
-  warningThreshold: 0,
-}
+import toast from "react-hot-toast"
+import { LoaderCircle } from "lucide-react"
 
 const formatModeLabel = (mode?: string) => {
   if (!mode) return "Unknown"
@@ -44,57 +30,62 @@ const formatModeLabel = (mode?: string) => {
   return mode.toUpperCase()
 }
 
-const getSwitchButtonClassName = (isOn: boolean) =>
-  isOn
-    ? "min-w-28 border-primary bg-primary text-primary-foreground hover:bg-primary/90 hover:text-primary-foreground"
-    : "min-w-28 border-red-600 bg-red-600 text-white hover:bg-red-700 hover:text-white"
-
+const formatTimestamp = (ts?: number) => {
+  if (!ts) return "-"
+  const d = new Date(ts)
+  if (Number.isNaN(d.getTime())) return String(ts)
+  return d.toLocaleString("id-ID", { dateStyle: "medium", timeStyle: "short" })
+}
 export default function SettingsPage() {
-  const deviceData = useGetDeviceData()
-  const controlsData = useGetControlsData()
+  const [isLoading, setIsLoading] = React.useState(false)
   const settingsData = useGetSettingsData()
-  const [draftSettings, setDraftSettings] =
-    useState<SettingsData>(defaultSettings)
-
-  useEffect(() => {
-    setDraftSettings({
-      activeInterval: settingsData.activeInterval ?? 0,
-      ecoInterval: settingsData.ecoInterval ?? 0,
-      readInterval: settingsData.readInterval ?? 0,
-      safeThreshold: settingsData.safeThreshold ?? 0,
-      warningThreshold: settingsData.warningThreshold ?? 0,
-    })
-  }, [settingsData])
-
-  const isAutoMode = useMemo(
-    () => deviceData.mode === "AUTO",
-    [deviceData.mode]
+  const [draftConfig, setDraftConfig] = useState<SettingsData>(
+    settingsData as SettingsData
   )
 
-  const handleControlToggle = () => {
-    const db = getDatabase(app)
-    const nextValue = !controlsData.buzzer
-    set(ref(db, `controls/buzzer`), nextValue)
+  useEffect(() => {
+    setDraftConfig(settingsData as SettingsData)
+  }, [settingsData])
+
+  const mode = draftConfig.config?.mode ?? "AUTO"
+
+  const canEditAdaptive = mode === "MANUAL_ADAPTIVE"
+  const canEditFixed = mode === "MANUAL_FIXED"
+
+  const handleConfigChange = (path: string[], value: any) => {
+    setDraftConfig((current) => {
+      const next = {
+        ...(current ?? {}),
+        config: { ...(current?.config ?? {}) },
+      }
+      let target: any = next.config
+      for (let i = 0; i < path.length - 1; i++) {
+        const key = path[i]
+        target[key] = { ...(target[key] ?? {}) }
+        target = target[key]
+      }
+      target[path[path.length - 1]] = value
+      return next
+    })
   }
 
-  const handleDeviceToggle = (field: "eco" | "mode") => {
-    const db = getDatabase(app)
+  const handleSaveConfig = async () => {
+    setIsLoading(true)
+    try {
+      const db = getDatabase(app)
 
-    if (field === "eco") {
-      const nextValue = !deviceData.eco
-      set(ref(db, `device/eco`), nextValue)
-      return
+      await Promise.all([
+        set(ref(db, "devices/aquaguard-01/config"), draftConfig.config),
+        set(ref(db, "devices/aquaguard-01/config/updatedAt"), Date.now()),
+        new Promise((resolve) => setTimeout(resolve, 1500)),
+      ])
+
+      setIsLoading(false)
+      toast.success("Konfigurasi berhasil disimpan!")
+    } catch (error) {
+      setIsLoading(false)
+      toast.error("Gagal menyimpan konfigurasi.")
     }
-
-    const nextValue = deviceData.mode === "AUTO" ? "MANUAL" : "AUTO"
-    set(ref(db, `device/mode`), nextValue)
-  }
-
-  const handleDraftChange = (field: keyof SettingsData, value: string) => {
-    setDraftSettings((current) => ({
-      ...current,
-      [field]: Number(value),
-    }))
   }
 
   return (
@@ -130,216 +121,336 @@ export default function SettingsPage() {
                   Settings Panel
                 </h1>
                 <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
-                  Kelola kontrol mode device, eco mode, dan buzzer dari satu
-                  halaman yang rapi. Jika device berada di mode AUTO, form
-                  manual akan otomatis dinonaktifkan.
+                  Kelola kontrol perangkat, dan konfigurasi sistem.
                 </p>
               </div>
 
               <div
                 className={`inline-flex items-center gap-2 self-start rounded-full border px-4 py-2 text-sm font-medium ${
-                  deviceData.mode === "AUTO"
+                  mode === "AUTO"
                     ? "border-amber-500/20 bg-amber-500/10 text-amber-700"
                     : "border-sky-500/20 bg-sky-500/10 text-sky-700"
                 }`}
               >
                 <span
-                  className={`size-2 rounded-full ${
-                    deviceData.mode === "AUTO" ? "bg-amber-500" : "bg-sky-500"
-                  }`}
+                  className={`size-2 rounded-full ${mode === "AUTO" ? "bg-amber-500" : "bg-sky-500"}`}
                 />
-                {formatModeLabel(deviceData.mode)} Mode
+                {formatModeLabel(mode)} Mode
               </div>
             </div>
           </div>
 
           <Card className="border-border/60 bg-background shadow-sm">
-            <CardHeader>
-              <CardTitle>Device Controls</CardTitle>
-              <CardDescription>
-                Panel operasional untuk mode device, eco mode dan buzzer.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="grid gap-4 md:grid-cols-3">
-              <div className="grid gap-3 rounded-xl border border-border/60 bg-muted/20 p-4 md:grid-cols-[1fr_auto] md:items-center">
-                <div>
-                  <p className="text-sm text-muted-foreground">Mode</p>
-                  <p className="mt-1 text-lg font-medium">
-                    {formatModeLabel(deviceData.mode)}
-                  </p>
-                </div>
-                <Button
-                  type="button"
-                  variant="default"
-                  onClick={() => handleDeviceToggle("mode")}
-                  className={getSwitchButtonClassName(
-                    deviceData.mode === "AUTO"
-                  )}
-                >
-                  {deviceData.mode === "AUTO" ? "Switch Off" : "Switch On"}
-                </Button>
-              </div>
-
-              <div className="grid gap-3 rounded-xl border border-border/60 bg-muted/20 p-4 md:grid-cols-[1fr_auto] md:items-center">
-                <div>
-                  <p className="text-sm text-muted-foreground">Eco Mode</p>
-                  <p className="mt-1 text-lg font-medium">
-                    {deviceData.eco ? "Aktif" : "Nonaktif"}
-                  </p>
-                </div>
-                <Button
-                  type="button"
-                  variant="default"
-                  onClick={() => handleDeviceToggle("eco")}
-                  className={getSwitchButtonClassName(deviceData.eco ?? false)}
-                >
-                  {deviceData.eco ? "Switch Off" : "Switch On"}
-                </Button>
-              </div>
-
-              <div className="grid gap-3 rounded-xl border border-border/60 bg-muted/20 p-4 md:grid-cols-[1fr_auto] md:items-center">
-                <div>
-                  <p className="text-sm text-muted-foreground">Buzzer</p>
-                  <p className="mt-1 text-lg font-medium">
-                    {controlsData.buzzer ? "Aktif" : "Nonaktif"}
-                  </p>
-                </div>
-                <Button
-                  type="button"
-                  variant="default"
-                  onClick={handleControlToggle}
-                  className={getSwitchButtonClassName(
-                    controlsData.buzzer ?? false
-                  )}
-                >
-                  {controlsData.buzzer ? "Switch Off" : "Switch On"}
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="border-border/60 bg-background shadow-sm">
-            <CardHeader className="flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
-              <div>
-                <CardTitle>System Settings</CardTitle>
-                <CardDescription>
-                  Semua data settings ditampilkan di sini. Jika mode device
-                  AUTO, input manual akan dikunci.
-                </CardDescription>
-              </div>
-              <div
-                className={`inline-flex w-fit rounded-full border px-3 py-1 text-xs font-medium ${
-                  isAutoMode
-                    ? "border-border/60 bg-muted/40 text-muted-foreground"
-                    : "border-border/60 bg-muted/40 text-foreground"
-                }`}
-              >
-                {isAutoMode ? "Locked by AUTO" : "Editable"}
-              </div>
-            </CardHeader>
-
             <CardContent>
-              {isAutoMode ? (
-                <div className="mb-4 rounded-xl border border-border/60 bg-muted/20 p-4 text-sm text-muted-foreground">
-                  Mode device sedang AUTO, sehingga semua input manual
-                  dinonaktifkan.
+              <div className="mb-4 text-sm text-muted-foreground">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm">Mode konfigurasi</p>
+                    <p className="mt-1 text-lg font-medium">{mode}</p>
+                  </div>
+                  <div className="flex gap-2">
+                    <Button
+                      variant={mode === "AUTO" ? "default" : "outline"}
+                      onClick={() => handleConfigChange(["mode"], "AUTO")}
+                    >
+                      AUTO
+                    </Button>
+                    <Button
+                      variant={
+                        mode === "MANUAL_ADAPTIVE" ? "default" : "outline"
+                      }
+                      onClick={() =>
+                        handleConfigChange(["mode"], "MANUAL_ADAPTIVE")
+                      }
+                    >
+                      MANUAL_ADAPTIVE
+                    </Button>
+                    <Button
+                      variant={mode === "MANUAL_FIXED" ? "default" : "outline"}
+                      onClick={() =>
+                        handleConfigChange(["mode"], "MANUAL_FIXED")
+                      }
+                    >
+                      MANUAL_FIXED
+                    </Button>
+                  </div>
                 </div>
-              ) : (
-                <div className="mb-4 rounded-xl border border-border/60 bg-muted/20 p-4 text-sm text-muted-foreground">
-                  Mode device tidak AUTO. Input manual bisa diisi.
+
+                <div className="mt-4 grid gap-4">
+                  <div className="rounded-xl border border-border/60 bg-muted/20 p-4">
+                    <p className="text-sm font-medium">
+                      Adaptive (read-only unless MANUAL_ADAPTIVE)
+                    </p>
+                    <div className="mt-2 grid gap-2 md:grid-cols-2">
+                      <label className="space-y-1 text-sm">
+                        <span className="text-muted-foreground">
+                          Alert Read Interval (ms)
+                        </span>
+                        <Input
+                          type="number"
+                          value={
+                            draftConfig.config?.adaptive?.alertReadInterval ?? 0
+                          }
+                          disabled={!canEditAdaptive}
+                          onChange={(e) =>
+                            handleConfigChange(
+                              ["adaptive", "alertReadInterval"],
+                              Number(e.currentTarget.value)
+                            )
+                          }
+                        />
+                      </label>
+                      <label className="space-y-1 text-sm">
+                        <span className="text-muted-foreground">
+                          Alert Report Interval (ms)
+                        </span>
+                        <Input
+                          type="number"
+                          value={
+                            draftConfig.config?.adaptive?.alertReportInterval ??
+                            0
+                          }
+                          disabled={!canEditAdaptive}
+                          onChange={(e) =>
+                            handleConfigChange(
+                              ["adaptive", "alertReportInterval"],
+                              Number(e.currentTarget.value)
+                            )
+                          }
+                        />
+                      </label>
+                      <label className="space-y-1 text-sm">
+                        <span className="text-muted-foreground">
+                          Low Power Read Interval (ms)
+                        </span>
+                        <Input
+                          type="number"
+                          value={
+                            draftConfig.config?.adaptive
+                              ?.lowPowerReadInterval ?? 0
+                          }
+                          disabled={!canEditAdaptive}
+                          onChange={(e) =>
+                            handleConfigChange(
+                              ["adaptive", "lowPowerReadInterval"],
+                              Number(e.currentTarget.value)
+                            )
+                          }
+                        />
+                      </label>
+                      <label className="space-y-1 text-sm">
+                        <span className="text-muted-foreground">
+                          Low Power Report Interval (ms)
+                        </span>
+                        <Input
+                          type="number"
+                          value={
+                            draftConfig.config?.adaptive
+                              ?.lowPowerReportInterval ?? 0
+                          }
+                          disabled={!canEditAdaptive}
+                          onChange={(e) =>
+                            handleConfigChange(
+                              ["adaptive", "lowPowerReportInterval"],
+                              Number(e.currentTarget.value)
+                            )
+                          }
+                        />
+                      </label>
+                      <label className="space-y-1 text-sm">
+                        <span className="text-muted-foreground">
+                          Monitoring Read Interval (ms)
+                        </span>
+                        <Input
+                          type="number"
+                          value={
+                            draftConfig.config?.adaptive
+                              ?.monitoringReadInterval ?? 0
+                          }
+                          disabled={!canEditAdaptive}
+                          onChange={(e) =>
+                            handleConfigChange(
+                              ["adaptive", "monitoringReadInterval"],
+                              Number(e.currentTarget.value)
+                            )
+                          }
+                        />
+                      </label>
+                      <label className="space-y-1 text-sm">
+                        <span className="text-muted-foreground">
+                          Monitoring Report Interval (ms)
+                        </span>
+                        <Input
+                          type="number"
+                          value={
+                            draftConfig.config?.adaptive
+                              ?.monitoringReportInterval ?? 0
+                          }
+                          disabled={!canEditAdaptive}
+                          onChange={(e) =>
+                            handleConfigChange(
+                              ["adaptive", "monitoringReportInterval"],
+                              Number(e.currentTarget.value)
+                            )
+                          }
+                        />
+                      </label>
+                    </div>
+                  </div>
+
+                  <div className="rounded-xl border border-border/60 bg-muted/20 p-4">
+                    <p className="text-sm font-medium">
+                      Fixed (read-only unless MANUAL_FIXED)
+                    </p>
+                    <div className="mt-2 grid gap-2 md:grid-cols-2">
+                      <label className="space-y-1 text-sm">
+                        <span className="text-muted-foreground">
+                          Read Interval (ms)
+                        </span>
+                        <Input
+                          type="number"
+                          value={draftConfig.config?.fixed?.readInterval ?? 0}
+                          disabled={!canEditFixed}
+                          onChange={(e) =>
+                            handleConfigChange(
+                              ["fixed", "readInterval"],
+                              Number(e.currentTarget.value)
+                            )
+                          }
+                        />
+                      </label>
+                      <label className="space-y-1 text-sm">
+                        <span className="text-muted-foreground">
+                          Report Interval (ms)
+                        </span>
+                        <Input
+                          type="number"
+                          value={draftConfig.config?.fixed?.reportInterval ?? 0}
+                          disabled={!canEditFixed}
+                          onChange={(e) =>
+                            handleConfigChange(
+                              ["fixed", "reportInterval"],
+                              Number(e.currentTarget.value)
+                            )
+                          }
+                        />
+                      </label>
+                    </div>
+                  </div>
                 </div>
-              )}
 
-              <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
-                <label className="space-y-2">
-                  <span className="text-sm font-medium text-muted-foreground">
-                    Active Interval
-                  </span>
-                  <Input
-                    type="number"
-                    value={draftSettings.activeInterval ?? 0}
-                    onChange={(event) =>
-                      handleDraftChange(
-                        "activeInterval",
-                        event.currentTarget.value
-                      )
-                    }
-                    disabled={isAutoMode}
-                    min={0}
-                  />
-                </label>
+                <div className="mt-4 grid gap-4 md:grid-cols-3">
+                  <label className="space-y-2">
+                    <span className="text-sm font-medium text-muted-foreground">
+                      Beep Interval (ms)
+                    </span>
+                    <Input
+                      type="number"
+                      value={draftConfig.config?.beepInterval ?? 0}
+                      onChange={(e) =>
+                        handleConfigChange(
+                          ["beepInterval"],
+                          Number(e.currentTarget.value)
+                        )
+                      }
+                      min={0}
+                    />
+                  </label>
 
-                <label className="space-y-2">
-                  <span className="text-sm font-medium text-muted-foreground">
-                    Eco Interval
-                  </span>
-                  <Input
-                    type="number"
-                    value={draftSettings.ecoInterval ?? 0}
-                    onChange={(event) =>
-                      handleDraftChange(
-                        "ecoInterval",
-                        event.currentTarget.value
-                      )
-                    }
-                    disabled={isAutoMode}
-                    min={0}
-                  />
-                </label>
+                  <label className="space-y-2">
+                    <span className="text-sm font-medium text-muted-foreground">
+                      Buzzer Override
+                    </span>
+                    <select
+                      className="h-9 w-full rounded-4xl border border-input bg-input/30 px-3 py-1 text-base transition-colors outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 md:text-sm"
+                      value={draftConfig.config?.buzzerOverride ?? "AUTO"}
+                      onChange={(e) =>
+                        handleConfigChange(
+                          ["buzzerOverride"],
+                          e.currentTarget.value
+                        )
+                      }
+                    >
+                      <option value="AUTO">AUTO</option>
+                      <option value="ON">ON</option>
+                      <option value="OFF">OFF</option>
+                    </select>
+                  </label>
 
-                <label className="space-y-2">
-                  <span className="text-sm font-medium text-muted-foreground">
-                    Read Interval
-                  </span>
-                  <Input
-                    type="number"
-                    value={draftSettings.readInterval ?? 0}
-                    onChange={(event) =>
-                      handleDraftChange(
-                        "readInterval",
-                        event.currentTarget.value
-                      )
-                    }
-                    disabled={isAutoMode}
-                    min={0}
-                  />
-                </label>
+                  <label className="space-y-2">
+                    <span className="text-sm font-medium text-muted-foreground">
+                      LCD Override
+                    </span>
+                    <select
+                      className="h-9 w-full rounded-4xl border border-input bg-input/30 px-3 py-1 text-base transition-colors outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 md:text-sm"
+                      value={draftConfig.config?.lcdOverride ?? "AUTO"}
+                      onChange={(e) =>
+                        handleConfigChange(
+                          ["lcdOverride"],
+                          e.currentTarget.value
+                        )
+                      }
+                    >
+                      <option value="AUTO">AUTO</option>
+                      <option value="ON">ON</option>
+                      <option value="OFF">OFF</option>
+                    </select>
+                  </label>
+                </div>
 
-                <label className="space-y-2">
-                  <span className="text-sm font-medium text-muted-foreground">
-                    Safe Threshold
-                  </span>
-                  <Input
-                    type="number"
-                    value={draftSettings.safeThreshold ?? 0}
-                    onChange={(event) =>
-                      handleDraftChange(
-                        "safeThreshold",
-                        event.currentTarget.value
-                      )
-                    }
-                    disabled={isAutoMode}
-                    min={0}
-                  />
-                </label>
+                <div className="mt-4 grid gap-4 md:grid-cols-2">
+                  <label className="space-y-2">
+                    <span className="text-sm font-medium text-muted-foreground">
+                      Safe Threshold
+                    </span>
+                    <Input
+                      type="number"
+                      value={draftConfig.config?.safeThreshold ?? 0}
+                      onChange={(e) =>
+                        handleConfigChange(
+                          ["safeThreshold"],
+                          Number(e.currentTarget.value)
+                        )
+                      }
+                      min={0}
+                    />
+                  </label>
 
-                <label className="space-y-2">
-                  <span className="text-sm font-medium text-muted-foreground">
-                    Warning Threshold
-                  </span>
-                  <Input
-                    type="number"
-                    value={draftSettings.warningThreshold ?? 0}
-                    onChange={(event) =>
-                      handleDraftChange(
-                        "warningThreshold",
-                        event.currentTarget.value
-                      )
-                    }
-                    disabled={isAutoMode}
-                    min={0}
-                  />
-                </label>
+                  <label className="space-y-2">
+                    <span className="text-sm font-medium text-muted-foreground">
+                      Warning Threshold
+                    </span>
+                    <Input
+                      type="number"
+                      value={draftConfig.config?.warningThreshold ?? 0}
+                      onChange={(e) =>
+                        handleConfigChange(
+                          ["warningThreshold"],
+                          Number(e.currentTarget.value)
+                        )
+                      }
+                      min={0}
+                    />
+                  </label>
+                </div>
+
+                <div className="mt-6 flex items-center justify-between gap-2">
+                  <div className="">
+                    <p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
+                      Updated At
+                    </p>
+                    <p className="mt-2 text-sm font-semibold text-foreground">
+                      {formatTimestamp(settingsData.config?.updatedAt)}
+                    </p>
+                  </div>
+
+                  <Button onClick={handleSaveConfig} disabled={isLoading}>
+                    {isLoading && (
+                      <LoaderCircle className="mr-2 size-4 animate-spin" />
+                    )}
+                    {isLoading ? "Menyimpan..." : "Simpan Konfigurasi"}
+                  </Button>
+                </div>
               </div>
             </CardContent>
           </Card>
