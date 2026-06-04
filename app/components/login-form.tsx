@@ -11,6 +11,10 @@ import { Controller, useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import loginSchema from "~/lib/schema/login-schema"
 import * as z from "zod"
+import toast from "react-hot-toast"
+import React from "react"
+import { LoaderCircle } from "lucide-react"
+import { replace, useNavigate } from "react-router"
 
 export function LoginForm() {
   const form = useForm<z.infer<typeof loginSchema>>({
@@ -21,8 +25,28 @@ export function LoginForm() {
     },
   })
 
-  const onSubmit = (data: z.infer<typeof loginSchema>) => {
-    console.log(data)
+  const navigate = useNavigate()
+  const [isLoading, setIsLoading] = React.useState(false)
+
+  const onSubmit = async (data: z.infer<typeof loginSchema>) => {
+    setIsLoading(true)
+    try {
+      if (data.username !== "admin" || data.password !== "admin") {
+        toast.error("Login gagal. Pastikan username dan password benar.")
+        form.reset()
+        setIsLoading(false)
+        return
+      }
+
+      setIsLoading(false)
+      toast.success("Login berhasil!")
+      setTimeout(() => {
+        window.location.href = "/dashboard"
+      }, 1000)
+    } catch (error) {
+      toast.error("Terjadi kesalahan saat login.")
+      setIsLoading(false)
+    }
   }
 
   return (
@@ -68,6 +92,7 @@ export function LoginForm() {
                     <FieldLabel htmlFor="password">Password</FieldLabel>
                     <Input
                       {...field}
+                      type="password"
                       id="password"
                       aria-invalid={fieldState.invalid}
                       placeholder="Masukkan password"
@@ -80,8 +105,16 @@ export function LoginForm() {
                 )}
               />
               <Field>
-                <Button type="submit" form="form-login">
-                  Login
+                <Button
+                  type="submit"
+                  form="form-login"
+                  disabled={isLoading}
+                  className="w-full"
+                >
+                  {isLoading && (
+                    <LoaderCircle className="mr-2 size-4 animate-spin" />
+                  )}
+                  {isLoading ? "Memproses..." : "Login"}
                 </Button>
               </Field>
             </FieldGroup>

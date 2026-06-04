@@ -10,6 +10,7 @@ import {
 import type { Route } from "./+types/root"
 import "./app.css"
 import { TooltipProvider } from "./components/ui/tooltip"
+import { Toaster } from "react-hot-toast"
 
 export function Layout({ children }: { children: React.ReactNode }) {
   return (
@@ -21,7 +22,15 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <Links />
       </head>
       <body>
-        <TooltipProvider>{children}</TooltipProvider>
+        <TooltipProvider>
+          {children}
+          <Toaster
+            position="top-right"
+            toastOptions={{
+              duration: 4000,
+            }}
+          />
+        </TooltipProvider>
         <ScrollRestoration />
         <Scripts />
       </body>
