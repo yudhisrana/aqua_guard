@@ -10,6 +10,7 @@ import {
 import {
   Card,
   CardDescription,
+  CardContent,
   CardHeader,
   CardTitle,
 } from "~/components/ui/card"
@@ -34,53 +35,118 @@ const formatLastSeen = (lastSeen?: number) => {
   })
 }
 
+const formatBoolean = (value?: boolean) => (value ? "Ya" : "Tidak")
+
+const formatNumber = (value?: number, fractionDigits = 2) => {
+  if (value === undefined || Number.isNaN(value)) return "-"
+  return new Intl.NumberFormat("id-ID", {
+    maximumFractionDigits: fractionDigits,
+  }).format(value)
+}
+
+const isConnectedValue = (value?: string) =>
+  Boolean(value && value.trim() !== "" && value !== "-")
+
 export default function DeviceInfoPage() {
   const deviceData = useGetDeviceData()
+  const statusValue = deviceData.status?.activityState
+  const isConnected = isConnectedValue(statusValue)
 
-  const cards = [
+  const labelStatusBanjir = {
+    DRY: "Kering",
+    SAFE: "Aman",
+    WARNING: "Waspada",
+    DANGER: "Bahaya",
+  }
+
+  const labelIntensitasHujan = {
+    NONE: "Tidak terdeteksi",
+    LIGHT: "Ringan",
+    MODERATE: "Sedang",
+    HEAVY: "Lebat",
+  }
+
+  const statusDetails = [
     {
-      label: "Status Perangkat",
-      value: deviceData.online ? "Online" : "Offline",
-      description: deviceData.online
-        ? "Device sedang mengirim data"
-        : "Belum ada koneksi aktif",
-      tone: deviceData.online
-        ? "border-emerald-500/20 bg-emerald-500/10 text-emerald-700"
-        : "border-red-500/20 bg-red-500/10 text-red-700",
-      spanClass: "xl:col-span-2",
+      label: "Status Aktivitas",
+      value: deviceData.status?.activityState ?? "-",
     },
     {
-      label: "Mode Operasi",
-      value: deviceData.mode ?? "-",
-      description: "Mode yang sedang digunakan perangkat",
-      tone: "border-sky-500/20 bg-sky-500/10 text-sky-700",
-      spanClass: "xl:col-span-2",
-    },
-    {
-      label: "Eco Mode",
-      value: deviceData.eco ? "Aktif" : "Nonaktif",
-      description: "Penghematan daya perangkat",
-      tone: deviceData.eco
-        ? "border-amber-500/20 bg-amber-500/10 text-amber-700"
-        : "border-zinc-500/20 bg-zinc-500/10 text-zinc-700",
-      spanClass: "xl:col-span-2",
-    },
-    {
-      label: "Sensor Height",
+      label: "Persentase Baterai",
       value:
-        typeof deviceData.sensorHeight === "number"
-          ? `${deviceData.sensorHeight} cm`
-          : "-",
-      description: "Ketinggian sensor yang terdeteksi",
-      tone: "border-violet-500/20 bg-violet-500/10 text-violet-700",
-      spanClass: "xl:col-span-3",
+        deviceData.status?.batteryPercent === undefined
+          ? "-"
+          : `${deviceData.status.batteryPercent}%`,
     },
     {
-      label: "Last Seen",
-      value: formatLastSeen(deviceData.lastSeen),
-      description: "Waktu terakhir perangkat mengirim data",
-      tone: "border-yellow-500/20 bg-yellow-500/10 text-yellow-700",
-      spanClass: "xl:col-span-3",
+      label: "Buzzer",
+      value: formatBoolean(deviceData.status?.buzzerOn),
+    },
+    {
+      label: "Override Buzzer",
+      value: deviceData.status?.buzzerOverride ?? "-",
+    },
+    {
+      label: "Jarak",
+      value:
+        deviceData.status?.distance === undefined
+          ? "-"
+          : `${formatNumber(deviceData.status.distance)} cm`,
+    },
+    {
+      label: "Status Banjir",
+      value:
+        labelStatusBanjir[
+          deviceData.status?.floodStatus as keyof typeof labelStatusBanjir
+        ] ?? "-",
+    },
+    {
+      label: "Terakhir Terlihat",
+      value: formatLastSeen(deviceData.status?.lastSeenAt),
+    },
+    {
+      label: "LCD",
+      value: formatBoolean(deviceData.status?.lcdOn),
+    },
+    {
+      label: "Override LCD",
+      value: deviceData.status?.lcdOverride ?? "-",
+    },
+    {
+      label: "Mode",
+      value: deviceData.status?.mode ?? "-",
+    },
+    {
+      label: "Terdeteksi Hujan",
+      value: formatBoolean(deviceData.status?.rainDetected),
+    },
+    {
+      label: "Intensitas Hujan",
+      value:
+        labelIntensitasHujan[
+          deviceData.status?.rainIntensity as keyof typeof labelIntensitasHujan
+        ] ?? "-",
+    },
+    {
+      label: "Interval Baca",
+      value:
+        deviceData.status?.readInterval === undefined
+          ? "-"
+          : `${deviceData.status.readInterval} ms`,
+    },
+    {
+      label: "Interval Laporan",
+      value:
+        deviceData.status?.reportInterval === undefined
+          ? "-"
+          : `${deviceData.status.reportInterval} ms`,
+    },
+    {
+      label: "Ketinggian Air",
+      value:
+        deviceData.status?.waterLevel === undefined
+          ? "-"
+          : `${formatNumber(deviceData.status.waterLevel)} cm`,
     },
   ]
 
@@ -116,47 +182,49 @@ export default function DeviceInfoPage() {
                   Informasi perangkat
                 </h1>
                 <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
-                  Ringkasan realtime status device, mode operasi, eco mode,
-                  ketinggian sensor, dan waktu terakhir update.
+                  Ringkasan realtime status perangkat AquaGuard
                 </p>
               </div>
               <div
                 className={`inline-flex items-center gap-2 self-start rounded-full border px-4 py-2 text-sm font-medium ${
-                  deviceData.online
+                  isConnected
                     ? "border-emerald-500/20 bg-emerald-500/10 text-emerald-700"
                     : "border-red-500/20 bg-red-500/10 text-red-700"
                 }`}
               >
                 <span
                   className={`size-2 rounded-full ${
-                    deviceData.online ? "bg-emerald-500" : "bg-red-500"
+                    isConnected ? "bg-emerald-500" : "bg-red-500"
                   }`}
                 />
-                {deviceData.online ? "Terhubung" : "Tidak terhubung"}
+                {isConnected ? "Terhubung" : "Tidak terhubung"}
               </div>
             </div>
           </div>
 
-          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-6">
-            {cards.map((card) => (
-              <Card
-                key={card.label}
-                className={`border-border/60 bg-background ${card.spanClass}`}
-              >
-                <CardHeader className="space-y-3">
-                  <div className="flex items-center justify-between gap-3">
-                    <div
-                      className={`inline-flex w-fit rounded-full border px-3 py-1 text-xs font-medium ${card.tone}`}
-                    >
-                      {card.label}
-                    </div>
-                  </div>
-                  <CardTitle className="text-2xl">{card.value}</CardTitle>
-                  <CardDescription>{card.description}</CardDescription>
-                </CardHeader>
-              </Card>
-            ))}
-          </div>
+          <Card className="border-border/60 bg-background">
+            <CardHeader>
+              <CardTitle>Status Perangkat</CardTitle>
+              <CardDescription>
+                Detail lengkap dari status perangkat.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+              {statusDetails.map((item) => (
+                <div
+                  key={item.label}
+                  className="rounded-2xl border border-border/60 bg-muted/30 p-4"
+                >
+                  <p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
+                    {item.label}
+                  </p>
+                  <p className="mt-2 text-sm font-semibold wrap-break-word text-foreground">
+                    {item.value}
+                  </p>
+                </div>
+              ))}
+            </CardContent>
+          </Card>
         </div>
       </SidebarInset>
     </SidebarProvider>

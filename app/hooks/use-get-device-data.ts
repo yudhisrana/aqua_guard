@@ -5,22 +5,35 @@ import type { DeviceData } from "~/types"
 
 export function useGetDeviceData() {
   const [deviceData, setDeviceData] = useState<DeviceData>({
-    eco: false,
-    lastSeen: 0,
-    mode: "-",
-    online: false,
-    sensorHeight: 0,
+    status: {
+      activityState: "-",
+      batteryPercent: 0,
+      buzzerOn: false,
+      buzzerOverride: "-",
+      distance: 0,
+      floodStatus: "-",
+      lastSeenAt: 0,
+      lcdOn: false,
+      lcdOverride: "-",
+      mode: "-",
+      rainDetected: false,
+      rainIntensity: "-",
+      readInterval: 0,
+      reportInterval: 0,
+      waterLevel: 0,
+    },
   })
 
   useEffect(() => {
     const db = getDatabase(app)
-    const deviceRef = ref(db, "device")
+    const deviceRef = ref(db, "devices/aquaguard-01")
 
     const unsubscribe = onValue(deviceRef, (snapshot) => {
       const data = snapshot.val() as DeviceData | null
 
       if (data) {
         setDeviceData((current) => ({ ...current, ...data }))
+        console.log("Device data updated:", data)
       }
     })
 

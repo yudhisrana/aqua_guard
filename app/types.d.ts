@@ -1,9 +1,21 @@
 export type DeviceData = {
-  eco?: boolean
-  lastSeen?: number
-  mode?: string
-  online?: boolean
-  sensorHeight?: number
+  status?: {
+    activityState?: string
+    batteryPercent?: number
+    buzzerOn?: boolean
+    buzzerOverride?: string
+    distance?: number
+    floodStatus?: string
+    lastSeenAt?: number
+    lcdOn?: boolean
+    lcdOverride?: string
+    mode?: string
+    rainDetected?: boolean
+    rainIntensity?: string
+    readInterval?: number
+    reportInterval?: number
+    waterLevel?: number
+  }
 }
 
 export type ControlsData = {
