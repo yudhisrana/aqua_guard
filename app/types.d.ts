@@ -15,6 +15,7 @@ export type DeviceData = {
     rainIntensity?: string
     readInterval?: number
     reportInterval?: number
+    sensorHeight?: number
     waterLevel?: number
   }
 }

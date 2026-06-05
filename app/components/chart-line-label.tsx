@@ -1,7 +1,14 @@
 "use client"
 
-import { TrendingUp } from "lucide-react"
-import { CartesianGrid, LabelList, Line, LineChart, XAxis } from "recharts"
+import {
+  CartesianGrid,
+  Line,
+  LineChart,
+  XAxis,
+  YAxis,
+  ReferenceLine,
+  LabelList,
+} from "recharts"
 
 import {
   Card,
@@ -20,84 +27,111 @@ import {
 
 export const description = "A line chart with a label"
 
-const chartData = [
-  { month: "January", desktop: 186, mobile: 80 },
-  { month: "February", desktop: 305, mobile: 200 },
-  { month: "March", desktop: 237, mobile: 120 },
-  { month: "April", desktop: 73, mobile: 190 },
-  { month: "May", desktop: 209, mobile: 130 },
-  { month: "June", desktop: 214, mobile: 140 },
-]
+type ChartLineLabelProps = {
+  chartTitle: string
+  chartDescription: string
+  chartData: Array<{
+    snapshot: string
+    waterLevel: number
+    safeThreshold: number
+    warningThreshold: number
+  }>
+  chartConfig: ChartConfig
+  footerPrimaryText?: string
+  footerSecondaryText?: string
+}
 
-const chartConfig = {
-  desktop: {
-    label: "Desktop",
-    color: "var(--chart-1)",
-  },
-  mobile: {
-    label: "Mobile",
-    color: "var(--chart-2)",
-  },
-} satisfies ChartConfig
-
-export function ChartLineLabel() {
+export function ChartLineLabel({
+  chartTitle,
+  chartDescription,
+  chartData,
+  chartConfig,
+  footerPrimaryText,
+  footerSecondaryText,
+}: ChartLineLabelProps) {
   return (
-    <Card>
+    <Card className="border-border/60 bg-background shadow-sm">
       <CardHeader>
-        <CardTitle>Line Chart - Label</CardTitle>
-        <CardDescription>January - June 2024</CardDescription>
+        <CardTitle>{chartTitle}</CardTitle>
+        <CardDescription>{chartDescription}</CardDescription>
       </CardHeader>
       <CardContent>
-        <ChartContainer config={chartConfig}>
+        <ChartContainer config={chartConfig} className="h-80">
           <LineChart
             accessibilityLayer
             data={chartData}
             margin={{
-              top: 20,
-              left: 12,
+              top: 22,
+              left: 4,
               right: 12,
+              bottom: 0,
             }}
           >
             <CartesianGrid vertical={false} />
+            {/* line with point labels */}
             <XAxis
-              dataKey="month"
+              dataKey="snapshot"
               tickLine={false}
               axisLine={false}
               tickMargin={8}
-              tickFormatter={(value) => value.slice(0, 3)}
+              minTickGap={24}
             />
+            <YAxis tickLine={false} axisLine={false} tickMargin={8} />
             <ChartTooltip
               cursor={false}
-              content={<ChartTooltipContent indicator="line" />}
+              content={
+                <ChartTooltipContent
+                  indicator="line"
+                  labelKey="snapshot"
+                  nameKey="waterLevel"
+                  formatter={(value) =>
+                    typeof value === "number"
+                      ? new Intl.NumberFormat("id-ID").format(value)
+                      : String(value)
+                  }
+                />
+              }
             />
             <Line
-              dataKey="desktop"
+              dataKey="waterLevel"
               type="natural"
-              stroke="var(--color-desktop)"
+              stroke="var(--color-waterLevel)"
               strokeWidth={2}
-              dot={{
-                fill: "var(--color-desktop)",
-              }}
-              activeDot={{
-                r: 6,
-              }}
+              dot={{ r: 4, strokeWidth: 2, stroke: "#fff" }}
+              activeDot={{ r: 6 }}
             >
               <LabelList
+                dataKey="waterLevel"
                 position="top"
-                offset={12}
+                offset={8}
                 className="fill-foreground"
-                fontSize={12}
               />
             </Line>
+            {/* Draw threshold reference lines using last-known threshold values */}
+            {chartData?.length > 0 && (
+              <>
+                <ReferenceLine
+                  y={chartData[chartData.length - 1].safeThreshold}
+                  stroke="var(--color-safeThreshold)"
+                  strokeDasharray="6 6"
+                />
+                <ReferenceLine
+                  y={chartData[chartData.length - 1].warningThreshold}
+                  stroke="var(--color-warningThreshold)"
+                  strokeDasharray="3 6"
+                />
+              </>
+            )}
           </LineChart>
         </ChartContainer>
       </CardContent>
-      <CardFooter className="flex-col items-start gap-2 text-sm">
-        <div className="flex gap-2 leading-none font-medium">
-          Trending up by 5.2% this month <TrendingUp className="h-4 w-4" />
+      <CardFooter className="flex-col items-start gap-1 text-sm">
+        <div className="leading-none font-medium text-foreground">
+          {footerPrimaryText ?? "Trend realtime perangkat"}
         </div>
         <div className="leading-none text-muted-foreground">
-          Showing total visitors for the last 6 months
+          {footerSecondaryText ??
+            "Water level dibanding threshold aman dan waspada."}
         </div>
       </CardFooter>
     </Card>
