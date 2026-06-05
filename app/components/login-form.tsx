@@ -14,7 +14,6 @@ import * as z from "zod"
 import toast from "react-hot-toast"
 import React from "react"
 import { LoaderCircle } from "lucide-react"
-import { replace, useNavigate } from "react-router"
 
 export function LoginForm() {
   const form = useForm<z.infer<typeof loginSchema>>({
@@ -25,26 +24,24 @@ export function LoginForm() {
     },
   })
 
-  const navigate = useNavigate()
   const [isLoading, setIsLoading] = React.useState(false)
 
   const onSubmit = async (data: z.infer<typeof loginSchema>) => {
     setIsLoading(true)
     try {
       if (data.username !== "admin" || data.password !== "admin") {
-        toast.error("Login gagal. Pastikan username dan password benar.")
         form.reset()
-        setIsLoading(false)
+        toast.error("Login gagal. Pastikan username dan password benar.")
         return
       }
 
-      setIsLoading(false)
       toast.success("Login berhasil!")
       setTimeout(() => {
         window.location.href = "/dashboard"
-      }, 1000)
+      }, 1500)
     } catch (error) {
       toast.error("Terjadi kesalahan saat login.")
+    } finally {
       setIsLoading(false)
     }
   }

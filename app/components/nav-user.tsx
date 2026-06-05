@@ -4,7 +4,6 @@ import { Avatar, AvatarFallback, AvatarImage } from "~/components/ui/avatar"
 import {
   DropdownMenu,
   DropdownMenuContent,
-  DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
@@ -17,14 +16,8 @@ import {
   useSidebar,
 } from "~/components/ui/sidebar"
 import { HugeiconsIcon } from "@hugeicons/react"
-import {
-  UnfoldMoreIcon,
-  SparklesIcon,
-  CheckmarkBadgeIcon,
-  CreditCardIcon,
-  NotificationIcon,
-  LogoutIcon,
-} from "@hugeicons/core-free-icons"
+import { UnfoldMoreIcon, LogoutIcon } from "@hugeicons/core-free-icons"
+import toast from "react-hot-toast"
 
 export function NavUser({
   user,
@@ -36,6 +29,13 @@ export function NavUser({
   }
 }) {
   const { isMobile } = useSidebar()
+
+  const logout = () => {
+    toast.success("Logout berhasil!")
+    setTimeout(() => {
+      window.location.href = "/login"
+    }, 1500)
+  }
 
   return (
     <SidebarMenu>
@@ -80,29 +80,7 @@ export function NavUser({
               </div>
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
-            <DropdownMenuGroup>
-              <DropdownMenuItem>
-                <HugeiconsIcon icon={SparklesIcon} strokeWidth={2} />
-                Upgrade to Pro
-              </DropdownMenuItem>
-            </DropdownMenuGroup>
-            <DropdownMenuSeparator />
-            <DropdownMenuGroup>
-              <DropdownMenuItem>
-                <HugeiconsIcon icon={CheckmarkBadgeIcon} strokeWidth={2} />
-                Account
-              </DropdownMenuItem>
-              <DropdownMenuItem>
-                <HugeiconsIcon icon={CreditCardIcon} strokeWidth={2} />
-                Billing
-              </DropdownMenuItem>
-              <DropdownMenuItem>
-                <HugeiconsIcon icon={NotificationIcon} strokeWidth={2} />
-                Notifications
-              </DropdownMenuItem>
-            </DropdownMenuGroup>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem>
+            <DropdownMenuItem onClick={logout} className="cursor-pointer">
               <HugeiconsIcon icon={LogoutIcon} strokeWidth={2} />
               Log out
             </DropdownMenuItem>
