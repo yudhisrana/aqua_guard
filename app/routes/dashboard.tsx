@@ -26,6 +26,7 @@ import {
 } from "~/components/ui/sidebar"
 import { useGetDeviceData } from "~/hooks/use-get-device-data"
 import { useGetSettingsData } from "~/hooks/use-get-settings-data"
+import { useLogin } from "~/hooks/use-login"
 
 type WaterTrendPoint = {
   snapshot: string
@@ -73,6 +74,16 @@ const trendChartConfig = {
 } satisfies ChartConfig
 
 export default function Page() {
+  const { isLoggedIn, isLoadingIn } = useLogin()
+
+  useEffect(() => {
+    if (isLoadingIn) return
+
+    if (!isLoggedIn) {
+      window.location.href = "/login"
+    }
+  }, [isLoggedIn, isLoadingIn])
+
   const deviceData = useGetDeviceData()
   const settingsData = useGetSettingsData()
   const [waterTrend, setWaterTrend] = useState<WaterTrendPoint[]>([])

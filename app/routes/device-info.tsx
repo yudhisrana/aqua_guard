@@ -1,3 +1,4 @@
+import { useEffect } from "react"
 import { AppSidebar } from "~/components/app-sidebar"
 import {
   Breadcrumb,
@@ -21,6 +22,7 @@ import {
   SidebarTrigger,
 } from "~/components/ui/sidebar"
 import { useGetDeviceData } from "~/hooks/use-get-device-data"
+import { useLogin } from "~/hooks/use-login"
 
 const formatLastSeen = (lastSeen?: number) => {
   if (lastSeen === 0 || lastSeen === undefined) return "-"
@@ -48,6 +50,16 @@ const isConnectedValue = (value?: string) =>
   Boolean(value && value.trim() !== "" && value !== "-")
 
 export default function DeviceInfoPage() {
+  const { isLoggedIn, isLoadingIn } = useLogin()
+
+  useEffect(() => {
+    if (isLoadingIn) return
+
+    if (!isLoggedIn) {
+      window.location.href = "/login"
+    }
+  }, [isLoggedIn, isLoadingIn])
+
   const deviceData = useGetDeviceData()
   const statusValue = deviceData.status?.activityState
   const isConnected = isConnectedValue(statusValue)

@@ -33,6 +33,7 @@ export function NavUser({
   const logout = () => {
     toast.success("Logout berhasil!")
     setTimeout(() => {
+      localStorage.clear()
       window.location.href = "/login"
     }, 1500)
   }

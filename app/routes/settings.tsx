@@ -23,6 +23,7 @@ import { getDatabase, ref, set } from "firebase/database"
 import { app } from "~/lib/firebase/init-firebase"
 import toast from "react-hot-toast"
 import { LoaderCircle } from "lucide-react"
+import { useLogin } from "~/hooks/use-login"
 
 const formatModeLabel = (mode?: string) => {
   if (!mode) return "Unknown"
@@ -37,6 +38,16 @@ const formatTimestamp = (ts?: number) => {
   return d.toLocaleString("id-ID", { dateStyle: "medium", timeStyle: "short" })
 }
 export default function SettingsPage() {
+  const { isLoggedIn, isLoadingIn } = useLogin()
+
+  useEffect(() => {
+    if (isLoadingIn) return
+
+    if (!isLoggedIn) {
+      window.location.href = "/login"
+    }
+  }, [isLoggedIn, isLoadingIn])
+
   const [isLoading, setIsLoading] = React.useState(false)
   const settingsData = useGetSettingsData()
   const [draftConfig, setDraftConfig] = useState<SettingsData>(

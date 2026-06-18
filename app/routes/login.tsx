@@ -1,6 +1,8 @@
 import { LoginForm } from "~/components/login-form"
 
 import type { Route } from "./+types/login"
+import { useLogin } from "~/hooks/use-login"
+import { useEffect } from "react"
 
 export const meta: Route.MetaFunction = () => {
   return [
@@ -15,6 +17,16 @@ export const meta: Route.MetaFunction = () => {
 }
 
 export default function LoginPage() {
+  const { isLoggedIn, isLoadingIn } = useLogin()
+
+  useEffect(() => {
+    if (isLoadingIn) return
+
+    if (isLoggedIn) {
+      window.location.href = "/dashboard"
+    }
+  }, [isLoggedIn, isLoadingIn])
+
   return (
     <div className="w-full max-w-sm md:max-w-4xl">
       <LoginForm />

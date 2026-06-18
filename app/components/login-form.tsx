@@ -15,6 +15,12 @@ import toast from "react-hot-toast"
 import React from "react"
 import { LoaderCircle } from "lucide-react"
 
+const dataLocal = {
+  name: "Administrator",
+  email: "admin@gmail.com",
+  isLoggedIn: "true",
+}
+
 export function LoginForm() {
   const form = useForm<z.infer<typeof loginSchema>>({
     resolver: zodResolver(loginSchema),
@@ -34,6 +40,11 @@ export function LoginForm() {
         toast.error("Login gagal. Pastikan username dan password benar.")
         return
       }
+
+      localStorage.setItem("username", data.username)
+      localStorage.setItem("isLoggedIn", dataLocal.isLoggedIn)
+      localStorage.setItem("name", dataLocal.name)
+      localStorage.setItem("email", dataLocal.email)
 
       toast.success("Login berhasil!")
       setTimeout(() => {

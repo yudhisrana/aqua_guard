@@ -25,11 +25,18 @@ import { NavDashboard } from "./nav-dashboard"
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const { pathname } = useLocation()
+  const [name, setName] = React.useState<string | null>(null)
+  const [email, setEmail] = React.useState<string | null>(null)
+
+  React.useEffect(() => {
+    setName(localStorage.getItem("name"))
+    setEmail(localStorage.getItem("email"))
+  }, [])
 
   const data = {
     user: {
-      name: "Administrator",
-      email: "admin@example.com",
+      name: name ?? "",
+      email: email ?? "",
       avatar: "/avatars/shadcn.jpg",
     },
     navDashboard: [
