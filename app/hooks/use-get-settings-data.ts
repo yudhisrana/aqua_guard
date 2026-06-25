@@ -26,7 +26,7 @@ const defaultConfig: SettingsData = {
       type: "none",
     },
     safeThreshold: 0,
-    updatedAt: Date.now(),
+    updatedAt: 0,
     warningThreshold: 0,
   },
 }
