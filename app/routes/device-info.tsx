@@ -64,20 +64,6 @@ export default function DeviceInfoPage() {
   const statusValue = deviceData.status?.activityState
   const isConnected = isConnectedValue(statusValue)
 
-  const labelStatusBanjir = {
-    DRY: "Kering",
-    SAFE: "Aman",
-    WARNING: "Waspada",
-    DANGER: "Bahaya",
-  }
-
-  const labelIntensitasHujan = {
-    NONE: "Tidak terdeteksi",
-    LIGHT: "Ringan",
-    MODERATE: "Sedang",
-    HEAVY: "Lebat",
-  }
-
   const statusDetails = [
     {
       label: "Status Aktivitas",
@@ -106,13 +92,6 @@ export default function DeviceInfoPage() {
           : `${formatNumber(deviceData.status.distance)} cm`,
     },
     {
-      label: "Status Banjir",
-      value:
-        labelStatusBanjir[
-          deviceData.status?.floodStatus as keyof typeof labelStatusBanjir
-        ] ?? "-",
-    },
-    {
       label: "Terakhir Terlihat",
       value: formatLastSeen(deviceData.status?.lastSeenAt),
     },
@@ -127,17 +106,6 @@ export default function DeviceInfoPage() {
     {
       label: "Mode",
       value: deviceData.status?.mode ?? "-",
-    },
-    {
-      label: "Terdeteksi Hujan",
-      value: formatBoolean(deviceData.status?.rainDetected),
-    },
-    {
-      label: "Intensitas Hujan",
-      value:
-        labelIntensitasHujan[
-          deviceData.status?.rainIntensity as keyof typeof labelIntensitasHujan
-        ] ?? "-",
     },
     {
       label: "Interval Baca",
