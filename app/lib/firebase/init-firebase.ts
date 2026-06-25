@@ -6,15 +6,14 @@ import { initializeApp } from "firebase/app"
 // Your web app's Firebase configuration
 // For Firebase JS SDK v7.20.0 and later, measurementId is optional
 const firebaseConfig = {
-  apiKey: "AIzaSyCFDGHVxbhRQ3n-lOpw0bUGi8kf3I73uhw",
-  authDomain: "aquaguard-1c198.firebaseapp.com",
-  databaseURL:
-    "https://aquaguard-1c198-default-rtdb.asia-southeast1.firebasedatabase.app",
-  projectId: "aquaguard-1c198",
-  storageBucket: "aquaguard-1c198.firebasestorage.app",
-  messagingSenderId: "121962297159",
-  appId: "1:121962297159:web:fe08044176d35c07fcbe62",
-  measurementId: "G-DXB82EEEBT",
+  apiKey: import.meta.env.VITE_API_KEY,
+  authDomain: import.meta.env.VITE_AUTH_DOMAIN,
+  databaseURL: import.meta.env.VITE_DATABASE_URL,
+  projectId: import.meta.env.VITE_PROJECT_ID,
+  storageBucket: import.meta.env.VITE_STORAGE_BUCKET,
+  messagingSenderId: import.meta.env.VITE_MESSAGING_SENDER_ID,
+  appId: import.meta.env.VITE_APP_ID,
+  measurementId: import.meta.env.VITE_MEASUREMENT_ID,
 }
 
 // Initialize Firebase
