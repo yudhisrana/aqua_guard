@@ -103,6 +103,9 @@ export default function Page() {
   const warningThreshold = settingsData.config?.warningThreshold ?? 0
   const currentMode = settingsData.config?.mode ?? "AUTO"
   const lastSeenAt = deviceData.status?.lastSeenAt ?? 0
+  const rainDetected = deviceData.status?.rainDetected ?? false
+  const rainIntensity = deviceData.status?.rainIntensity ?? "-"
+  const floodStatus = deviceData.status?.floodStatus ?? "-"
 
   const waterStatus = useMemo(() => {
     const levelFromSensorHeight =
@@ -185,6 +188,20 @@ export default function Page() {
           },
         ]
 
+  const labelIntensitasHujan = {
+    NONE: "Tidak terdeteksi",
+    LIGHT: "Ringan",
+    MODERATE: "Sedang",
+    HEAVY: "Lebat",
+  }
+
+  const labelStatusBanjir = {
+    DRY: "Kering",
+    SAFE: "Aman",
+    WARNING: "Waspada",
+    DANGER: "Bahaya",
+  }
+
   return (
     <SidebarProvider>
       <AppSidebar />
@@ -241,24 +258,64 @@ export default function Page() {
           <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
             <Card className="border-border/60 bg-background shadow-sm">
               <CardHeader className="pb-2">
-                <CardDescription>Water Level</CardDescription>
+                <CardDescription>Status Hujan</CardDescription>
+                <CardTitle className="text-2xl">
+                  {rainDetected ? "Hujan" : "Tidak Hujan"}
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="text-sm text-muted-foreground">
+                Sensor mendeteksi hujan atau tidak
+              </CardContent>
+            </Card>
+
+            <Card className="border-border/60 bg-background shadow-sm">
+              <CardHeader className="pb-2">
+                <CardDescription>Intensitas Hujan</CardDescription>
+                <CardTitle className="text-2xl">
+                  {labelIntensitasHujan[
+                    rainIntensity as keyof typeof labelIntensitasHujan
+                  ] ?? "-"}
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="text-sm text-muted-foreground">
+                Intensitas hujan yang terdeteksi oleh sensor
+              </CardContent>
+            </Card>
+
+            <Card className="border-border/60 bg-background shadow-sm">
+              <CardHeader className="pb-2">
+                <CardDescription>Status Ketinggian Air</CardDescription>
+                <CardTitle className="text-2xl">{waterStatus.label}</CardTitle>
+              </CardHeader>
+              <CardContent className="text-sm text-muted-foreground">
+                Batas Aman {"< "} {formatValue(safeThreshold)} cm <br />
+                Batas Peringatan {"< "} {formatValue(warningThreshold)} cm
+              </CardContent>
+            </Card>
+
+            <Card className="border-border/60 bg-background shadow-sm">
+              <CardHeader className="pb-2">
+                <CardDescription>Status Banjir</CardDescription>
+                <CardTitle className="text-2xl">
+                  {labelStatusBanjir[
+                    floodStatus as keyof typeof labelStatusBanjir
+                  ] ?? "-"}
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="text-sm text-muted-foreground">
+                Status banjir yang terdeteksi oleh sensor
+              </CardContent>
+            </Card>
+
+            <Card className="border-border/60 bg-background shadow-sm">
+              <CardHeader className="pb-2">
+                <CardDescription>Level Air</CardDescription>
                 <CardTitle className="text-2xl">
                   {formatValue(waterLevel)} cm
                 </CardTitle>
               </CardHeader>
               <CardContent className="text-sm text-muted-foreground">
                 Ketinggian Sensor: {formatValue(radialMaxValue)} cm
-              </CardContent>
-            </Card>
-
-            <Card className="border-border/60 bg-background shadow-sm">
-              <CardHeader className="pb-2">
-                <CardDescription>Status Air</CardDescription>
-                <CardTitle className="text-2xl">{waterStatus.label}</CardTitle>
-              </CardHeader>
-              <CardContent className="text-sm text-muted-foreground">
-                Batas Aman {"< "} {formatValue(safeThreshold)} cm <br />
-                Batas Peringatan {"< "} {formatValue(warningThreshold)} cm
               </CardContent>
             </Card>
 
